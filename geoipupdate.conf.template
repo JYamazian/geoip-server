@@ -1,0 +1,25 @@
+# GeoIP Update configuration file
+# Documentation: https://github.com/maxmind/geoipupdate/blob/main/doc/GeoIP.conf.md
+
+# AccountID and LicenseKey from MaxMind
+AccountID __ACCOUNT_ID__
+LicenseKey __LICENSE_KEY__
+
+# Product IDs for GeoLite2 databases
+EditionIDs GeoLite2-ASN GeoLite2-City GeoLite2-Country
+
+# Directory to store databases
+DatabaseDirectory __DATA_DIR__
+
+# Host and protocol
+Host updates.maxmind.com
+Protocol https
+
+# Preserve file modification times
+PreserveFileTimes 1
+
+# Lock file to prevent concurrent updates
+LockFile __DATA_DIR__/.geoipupdate.lock
+
+# Verbose output
+Verbose 1

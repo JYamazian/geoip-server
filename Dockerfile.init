@@ -1,0 +1,25 @@
+# Dockerfile for the init container that downloads MaxMind data
+FROM alpine:latest
+
+# Install curl, bash, tar, and geoipupdate for downloading and updating data
+RUN apk --no-cache add ca-certificates curl bash tar
+
+# Install geoipupdate from MaxMind (use a specific version that we know works)
+RUN wget https://github.com/maxmind/geoipupdate/releases/download/v7.0.1/geoipupdate_7.0.1_linux_amd64.tar.gz -O /tmp/geoipupdate.tar.gz && \
+    tar -xzf /tmp/geoipupdate.tar.gz -C /tmp && \
+    mv /tmp/geoipupdate_*/geoipupdate /usr/local/bin/ && \
+    rm -rf /tmp/geoipupdate*
+
+WORKDIR /app
+
+# Copy all scripts and configuration templates
+COPY download-geoip-data.sh .
+COPY update-geoip-data.sh .
+COPY geoip-manager.sh .
+COPY geoipupdate.conf.template .
+
+# Make scripts executable
+RUN chmod +x *.sh
+
+# Default command - run the combined manager in init mode
+CMD ["./geoip-manager.sh"]

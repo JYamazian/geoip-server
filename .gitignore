@@ -1,0 +1,35 @@
+# Binaries
+geoip-server
+geoip-server.exe
+
+# Data directory
+data/
+*.mmdb
+
+# Go specific
+*.mod
+*.sum
+vendor/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+
+# Docker
+.docker/
+
+# Test coverage
+coverage.out

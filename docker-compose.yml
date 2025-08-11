@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Init container for downloading MaxMind data
+  geoip-data-downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile.init
+    environment:
+      - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY:-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}
+      - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID:-1137965}
+      - DATA_DIR=/shared/data
+      - MODE=init
+    volumes:
+      - geoip_data:/shared/data
+    restart: "no"  # Only run once
+
+  # Update service for refreshing databases (optional)
+  geoip-data-updater:
+    build:
+      context: .
+      dockerfile: Dockerfile.init
+    environment:
+      - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY:-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}
+      - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID:-0}
+      - DATA_DIR=/shared/data
+      - MODE=daemon
+    volumes:
+      - geoip_data:/shared/data
+    restart: unless-stopped
+    profiles: ["updater"]  # Only start when explicitly requested
+
+  # Main GeoIP server
+  geoip-server:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_DIR=/shared/data
+      - GIN_MODE=release
+    volumes:
+      - geoip_data:/shared/data
+    depends_on:
+      - geoip-data-downloader
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  geoip_data:
