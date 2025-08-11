@@ -159,3 +159,60 @@ func getClientIP(c *gin.Context) string {
 	// Fall back to RemoteAddr
 	return c.ClientIP()
 }
+
+// ForwardAuthLookup handles ForwardAuth requests from Traefik
+// This endpoint is specifically designed for Traefik ForwardAuth middleware
+func (g *GeoIPService) ForwardAuthLookup(c *gin.Context) {
+	// Get the client IP from headers set by Traefik
+	clientIP := getClientIP(c)
+
+	ip := net.ParseIP(clientIP)
+	if ip == nil {
+		// Return 200 but without geo headers if IP can't be parsed
+		c.Status(http.StatusOK)
+		return
+	}
+
+	cityRecord, err := g.cityDB.City(ip)
+	if err != nil {
+		// Return 200 but without geo headers if lookup fails
+		c.Status(http.StatusOK)
+		return
+	}
+
+	// Create base response using helper function to get all the data
+	response := NewGeoIPResponse(clientIP, cityRecord)
+
+	// Add ASN information using helper function
+	AddASNInformation(&response, ip, clientIP, g.asnDB, g.asnRawDB)
+
+	// Set all geographic and ASN information as headers for ForwardAuth
+	c.Header("X-GeoIP-IP", response.IP)
+	c.Header("X-GeoIP-Country", response.CountryCode)
+	c.Header("X-GeoIP-Country-Name", response.Country)
+	c.Header("X-GeoIP-Region", response.RegionCode)
+	c.Header("X-GeoIP-Region-Name", response.Region)
+	c.Header("X-GeoIP-City", response.City)
+	c.Header("X-GeoIP-Postal-Code", response.PostalCode)
+	c.Header("X-GeoIP-Latitude", fmt.Sprintf("%.6f", response.Latitude))
+	c.Header("X-GeoIP-Longitude", fmt.Sprintf("%.6f", response.Longitude))
+	c.Header("X-GeoIP-Accuracy-Radius", fmt.Sprintf("%d", response.AccuracyRadius))
+	c.Header("X-GeoIP-Timezone", response.TimeZone)
+
+	// Add ASN headers if available
+	if response.ASN != 0 {
+		c.Header("X-GeoIP-ASN", fmt.Sprintf("%d", response.ASN))
+	}
+	if response.ASNOrg != "" {
+		c.Header("X-GeoIP-ASN-Org", response.ASNOrg)
+	}
+	if response.ASNNetwork != "" {
+		c.Header("X-GeoIP-ASN-Network", response.ASNNetwork)
+	}
+
+	// Forward the client IP for downstream services
+	c.Header("X-Forwarded-For", clientIP)
+
+	// Return 200 OK to allow the request to proceed
+	c.Status(http.StatusOK)
+}

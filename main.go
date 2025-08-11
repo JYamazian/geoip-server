@@ -57,6 +57,9 @@ func main() {
 	// Get client IP info
 	r.GET("/myip", geoIPService.GetClientIP)
 
+	// ForwardAuth endpoint for Traefik
+	r.GET("/lookup", geoIPService.ForwardAuthLookup)
+
 	// Set up graceful shutdown
 	srv := &http.Server{
 		Addr:    ":8080",
