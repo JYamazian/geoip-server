@@ -86,37 +86,11 @@ func main() {
 		})
 	})
 
-	// Debug endpoint to check headers and IP extraction
-	r.GET("/debug-ip", func(c *gin.Context) {
-		clientIP := getClientIPForLogging(c)
-		
-		c.JSON(http.StatusOK, gin.H{
-			"extracted_ip": clientIP,
-			"remote_addr": c.Request.RemoteAddr,
-			"gin_client_ip": c.ClientIP(),
-			"headers": gin.H{
-				"cf_connecting_ip": c.GetHeader("CF-Connecting-IP"),
-				"cf_ip_country": c.GetHeader("CF-IPCountry"),
-				"true_client_ip": c.GetHeader("True-Client-IP"),
-				"x_real_ip": c.GetHeader("X-Real-IP"),
-				"x_forwarded_for": c.GetHeader("X-Forwarded-For"),
-				"x_forwarded": c.GetHeader("X-Forwarded"),
-				"x_client_ip": c.GetHeader("X-Client-IP"),
-				"x_cluster_client_ip": c.GetHeader("X-Cluster-Client-IP"),
-				"forwarded": c.GetHeader("Forwarded"),
-			},
-			"all_headers": c.Request.Header,
-		})
-	})
-
 	// GeoIP lookup endpoint
 	r.GET("/:ip", geoIPService.LookupIP)
 
 	// Get client IP info
 	r.GET("/myip", geoIPService.GetClientIP)
-
-	// ForwardAuth endpoint for Traefik
-	r.GET("/lookup", geoIPService.ForwardAuthLookup)
 
 	// Set up graceful shutdown
 	srv := &http.Server{
