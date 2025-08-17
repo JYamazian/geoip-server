@@ -17,20 +17,21 @@ type GeoIPService struct {
 
 // GeoIPResponse represents the response structure for GeoIP lookups
 type GeoIPResponse struct {
-	IP             string  `json:"ip"`
-	Country        string  `json:"country"`
-	CountryCode    string  `json:"country_code"`
-	Region         string  `json:"region"`
-	RegionCode     string  `json:"region_code"`
-	City           string  `json:"city"`
-	PostalCode     string  `json:"postal_code"`
-	Latitude       float64 `json:"latitude"`
-	Longitude      float64 `json:"longitude"`
-	AccuracyRadius uint16  `json:"accuracy_radius,omitempty"`
-	TimeZone       string  `json:"timezone"`
-	ASN            uint    `json:"asn,omitempty"`
-	ASNOrg         string  `json:"asn_org,omitempty"`
-	ASNNetwork     string  `json:"asn_network,omitempty"`
+	IP             string      `json:"ip"`
+	Country        string      `json:"country"`
+	CountryCode    string      `json:"country_code"`
+	Region         string      `json:"region"`
+	RegionCode     string      `json:"region_code"`
+	City           string      `json:"city"`
+	PostalCode     string      `json:"postal_code"`
+	Latitude       float64     `json:"latitude"`
+	Longitude      float64     `json:"longitude"`
+	AccuracyRadius uint16      `json:"accuracy_radius,omitempty"`
+	TimeZone       string      `json:"timezone"`
+	ASN            uint        `json:"asn,omitempty"`
+	ASNOrg         string      `json:"asn_org,omitempty"`
+	ASNNetwork     string      `json:"asn_network,omitempty"`
+	Debug          interface{} `json:"debug,omitempty"`
 }
 
 // NewGeoIPResponse creates a new GeoIPResponse from a city record and IP string

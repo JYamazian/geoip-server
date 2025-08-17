@@ -9,12 +9,13 @@ set -e # Exit on error
 MAXMIND_LICENSE_KEY="${MAXMIND_LICENSE_KEY:-}"
 MAXMIND_ACCOUNT_ID="${MAXMIND_ACCOUNT_ID:-0}"  # Default for GeoLite2
 DATA_DIR="${DATA_DIR:-./data}"
-MODE="${MODE:-init}"  # Can be 'init', 'update', or 'daemon'
+MODE="${MODE:-update}"  # Can be 'init', 'update', or 'daemon'
 
 echo "GeoIP Database Manager"
 echo "====================="
 echo "Mode: $MODE"
 echo "Data Directory: $DATA_DIR"
+echo "Maxmind License Key: $MAXMIND_LICENSE_KEY"
 echo ""
 
 # Check required environment variables
