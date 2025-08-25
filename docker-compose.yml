@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Downloader container to fetch GeoIP data initially
+  # Init container for downloading MaxMind data then switching to daemon
   geoip-data-downloader:
     build:
       context: .
@@ -15,7 +15,7 @@ services:
       - geoip_data:/shared/data
     restart: "no"  # Only run once
 
-  # Update service for refreshing databases periodically or in daemon mode
+  # Update service for refreshing databases (always enabled for daemon mode)
   geoip-data-updater:
     build:
       context: .

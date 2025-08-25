@@ -71,7 +71,7 @@ update_with_geoipupdate() {
     sed -e "s|__ACCOUNT_ID__|${MAXMIND_ACCOUNT_ID}|g" \
         -e "s|__LICENSE_KEY__|${MAXMIND_LICENSE_KEY}|g" \
         -e "s|__DATA_DIR__|${DATA_DIR}|g" \
-        /app/geoipupdate.conf.template > "${CONFIG_FILE}"
+        /app/scripts/geoipupdate.conf.template > "${CONFIG_FILE}"
 
     # Run geoipupdate
     geoipupdate -f "${CONFIG_FILE}" -v
@@ -111,6 +111,22 @@ case "$MODE" in
         
     "daemon")
         echo "Starting daemon mode (multiple intervals supported)..."
+        # Check if DB files exist before starting loop
+        missing=0
+        for db in GeoLite2-ASN.mmdb GeoLite2-City.mmdb GeoLite2-Country.mmdb; do
+            if [ ! -f "${DATA_DIR}/${db}" ]; then
+                missing=1
+                break
+            fi
+        done
+        if [ "$missing" -eq 1 ]; then
+            echo "Some database files are missing. Downloading initial databases..."
+            if command -v geoipupdate >/dev/null 2>&1; then
+                update_with_geoipupdate || download_direct
+            else
+                download_direct
+            fi
+        fi
         # Allow comma-separated intervals, e.g. "30s,5m,3h"
         IFS=',' read -ra INTERVALS <<< "${UPDATE_INTERVAL}"
         while true; do

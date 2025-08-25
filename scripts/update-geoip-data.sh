@@ -33,7 +33,7 @@ echo "Generating geoipupdate configuration..."
 sed -e "s|__ACCOUNT_ID__|${MAXMIND_ACCOUNT_ID}|g" \
     -e "s|__LICENSE_KEY__|${MAXMIND_LICENSE_KEY}|g" \
     -e "s|__DATA_DIR__|${DATA_DIR}|g" \
-    /app/geoipupdate.conf.template > "${CONFIG_FILE}"
+    /app/scripts/geoipupdate.conf.template > "${CONFIG_FILE}"
 
 echo "Configuration file created at: ${CONFIG_FILE}"
 

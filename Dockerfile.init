@@ -12,14 +12,16 @@ RUN wget https://github.com/maxmind/geoipupdate/releases/download/v7.0.1/geoipup
 
 WORKDIR /app
 
-# Copy all scripts and configuration templates
-COPY scripts/download-geoip-data.sh .
-COPY scripts/update-geoip-data.sh .
-COPY scripts/geoip-manager.sh .
-COPY scripts/geoipupdate.conf.template .
+
+# Copy all scripts and configuration templates to /app/scripts
+RUN mkdir -p /app/scripts
+COPY scripts/download-geoip-data.sh /app/scripts/
+COPY scripts/update-geoip-data.sh /app/scripts/
+COPY scripts/geoip-manager.sh /app/scripts/
+COPY scripts/geoipupdate.conf.template /app/scripts/
 
 # Make scripts executable
-RUN chmod +x *.sh
+RUN chmod +x /app/scripts/*.sh
 
 # Default command - run the combined manager in init mode
-CMD ["./geoip-manager.sh"]
+CMD ["/app/scripts/geoip-manager.sh"]
