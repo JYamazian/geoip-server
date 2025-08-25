@@ -38,8 +38,8 @@ download-data: ## Download MaxMind GeoIP data
 		echo "Please set it with: export MAXMIND_LICENSE_KEY=your_license_key"; \
 		exit 1; \
 	fi
-	chmod +x download-geoip-data.sh
-	./download-geoip-data.sh
+	chmod +x scripts/download-geoip-data.sh
+	./scripts/download-geoip-data.sh
 
 # Docker targets
 docker-build: ## Build Docker images

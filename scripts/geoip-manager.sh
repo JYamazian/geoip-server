@@ -10,6 +10,7 @@ MAXMIND_LICENSE_KEY="${MAXMIND_LICENSE_KEY:-}"
 MAXMIND_ACCOUNT_ID="${MAXMIND_ACCOUNT_ID:-0}"  # Default for GeoLite2
 DATA_DIR="${DATA_DIR:-./data}"
 MODE="${MODE:-update}"  # Can be 'init', 'update', or 'daemon'
+UPDATE_INTERVAL="${UPDATE_INTERVAL:-24h}"  # Interval for daemon mode, e.g. "24h" or "30m"
 
 echo "GeoIP Database Manager"
 echo "====================="
@@ -109,17 +110,20 @@ case "$MODE" in
         ;;
         
     "daemon")
-        echo "Starting daemon mode (updates every 24 hours)..."
+        echo "Starting daemon mode (multiple intervals supported)..."
+        # Allow comma-separated intervals, e.g. "30s,5m,3h"
+        IFS=',' read -ra INTERVALS <<< "${UPDATE_INTERVAL}"
         while true; do
-            echo "$(date): Updating databases..."
-            if command -v geoipupdate >/dev/null 2>&1; then
-                update_with_geoipupdate || echo "Update failed, will retry in 24 hours"
-            else
-                download_direct || echo "Download failed, will retry in 24 hours"
-            fi
-            
-            echo "$(date): Next update in 24 hours"
-            sleep 86400  # 24 hours
+            for interval in "${INTERVALS[@]}"; do
+                echo "$(date): Updating databases..."
+                if command -v geoipupdate >/dev/null 2>&1; then
+                    update_with_geoipupdate || echo "Update failed, will retry in $interval"
+                else
+                    download_direct || echo "Download failed, will retry in $interval"
+                fi
+                echo "$(date): Next update in $interval"
+                sleep "$interval"
+            done
         done
         ;;
         

@@ -13,10 +13,10 @@ RUN wget https://github.com/maxmind/geoipupdate/releases/download/v7.0.1/geoipup
 WORKDIR /app
 
 # Copy all scripts and configuration templates
-COPY download-geoip-data.sh .
-COPY update-geoip-data.sh .
-COPY geoip-manager.sh .
-COPY geoipupdate.conf.template .
+COPY scripts/download-geoip-data.sh .
+COPY scripts/update-geoip-data.sh .
+COPY scripts/geoip-manager.sh .
+COPY scripts/geoipupdate.conf.template .
 
 # Make scripts executable
 RUN chmod +x *.sh

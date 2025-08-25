@@ -14,7 +14,7 @@ COPY go.mod ./
 RUN go mod tidy && go mod download
 
 # Copy source code
-COPY . .
+COPY src/ ./
 
 # Ensure dependencies are up to date and build
 RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o geoip-server .

@@ -11,15 +11,6 @@ EditionIDs GeoLite2-ASN GeoLite2-City GeoLite2-Country
 # Directory to store databases
 DatabaseDirectory __DATA_DIR__
 
-# Host and protocol
-Host updates.maxmind.com
-Protocol https
-
-# Preserve file modification times
-PreserveFileTimes 1
-
-# Verbose output for debugging
-Verbose 1
-
-# Lock file path (optional)
-LockFile __DATA_DIR__/geoipupdate.lock
+# Host and protocol (optional - defaults are usually fine)
+# Host updates.maxmind.com
+# Protocol https

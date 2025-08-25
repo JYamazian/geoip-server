@@ -1,237 +1,205 @@
+
 # GeoIP Server
 
-A high-performance GeoIP server written in Go that provides location information based on IP addresses using MaxMind's GeoLite2 database.
+[![Go](https://img.shields.io/badge/Go-1.21-00ADD8?logo=go&logoColor=white)](https://golang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Gin](https://img.shields.io/badge/Gin-Web_Framework-00ADD8?logo=go&logoColor=white)](https://gin-gonic.com/)
+[![MaxMind](https://img.shields.io/badge/MaxMind-GeoLite2-FF6B35?logo=maxmind&logoColor=white)](https://www.maxmind.com/)
+
+GeoIP Server is a high-performance Go service providing IP geolocation using MaxMind's GeoLite2 databases. It supports Docker, Kubernetes, and local development.
 
 ## Features
 
-- Fast IP geolocation lookups
+- Fast IP geolocation lookups (IPv4 & IPv6)
 - RESTful API endpoints
-- Support for both IPv4 and IPv6
-- Client IP detection with proper proxy header handling
+- Smart client IP detection (proxy headers)
 - Health check endpoint
-- Graceful shutdown
 - CORS support
-- Docker support with init container for data download
+- Docker & Kubernetes ready
+- Automated database download/update
 
-## Prerequisites
-
-1. **MaxMind License Key**: You need a free MaxMind account and license key
-   - Sign up at: https://www.maxmind.com/en/geolite2/signup
-   - Get your license key from your account dashboard
-
+docker build -t geoip-server .
+docker run -p 8080:8080 -e MAXMIND_LICENSE_KEY="your_license_key_here" geoip-server
 ## Quick Start
 
-### Option 1: Local Development
+### Prerequisites
 
-1. **Set up your MaxMind license key:**
-   ```bash
-   export MAXMIND_LICENSE_KEY="your_license_key_here"
+- Free MaxMind account & license key ([Sign up](https://www.maxmind.com/en/geolite2/signup))
+
+### Docker (Recommended)
+
+```sh
+docker build -t geoip-server .
+docker run -p 8080:8080 -e MAXMIND_LICENSE_KEY=your_license_key geoip-server
+```
+
+### Docker Compose
+
+1. Create `.env` file:
+   ```env
+   MAXMIND_LICENSE_KEY=your_license_key
+   ```
+2. Edit `docker-compose.yml` to use env vars (not hardcoded keys)
+3. Start services:
+   ```sh
+   docker-compose up -d --build
    ```
 
-2. **Download the GeoIP database:**
-   ```bash
-   chmod +x download-geoip-data.sh
-   ./download-geoip-data.sh
-   ```
+### Local Development
 
-3. **Install dependencies:**
-   ```bash
-   go mod download
-   ```
+```sh
+export MAXMIND_LICENSE_KEY=your_license_key
+chmod +x scripts/download-geoip-data.sh
+./scripts/download-geoip-data.sh
+go mod download
+go run src/
+```
 
-4. **Run the server:**
-   ```bash
-   go run .
-   ```
-
-### Option 2: Docker
-
-1. **Build and run with Docker:**
-   ```bash
-   docker build -t geoip-server .
-   docker run -p 8080:8080 -e MAXMIND_LICENSE_KEY="your_license_key_here" geoip-server
-   ```
-
-### Option 3: Docker Compose
-
-1. **Create a `.env` file:**
-   ```
-   MAXMIND_LICENSE_KEY=your_license_key_here
-   ```
-
-2. **Run with Docker Compose:**
-   ```bash
-   docker-compose up
-   ```
-
-## API Endpoints
+## API Reference
 
 ### Health Check
-```
-GET /health
-```
-Returns server health status.
+`GET /health`
 
-**Response:**
+Returns server health status:
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2023-12-07T10:30:00Z"
+   "status": "healthy",
+   "timestamp": "2023-12-07T10:30:00Z"
 }
 ```
 
-### IP Lookup
-```
-GET /geoip/{ip_address}
-```
-Returns geolocation information for the specified IP address.
+### IP Geolocation Lookup
+`GET /{ip}`
 
-**Example:**
-```bash
-curl http://localhost:8080/geoip/8.8.8.8
+Returns geolocation info for any IP:
+```sh
+curl http://localhost:8080/8.8.8.8
 ```
-
-**Response:**
+Response:
 ```json
 {
-  "ip": "8.8.8.8",
-  "country": "United States",
-  "country_code": "US",
-  "region": "California",
-  "region_code": "CA",
-  "city": "Mountain View",
-  "postal_code": "94043",
-  "latitude": 37.4056,
-  "longitude": -122.0775,
-  "timezone": "America/Los_Angeles"
+   "ip": "8.8.8.8",
+   "country": "United States",
+   "country_code": "US",
+   "region": "California",
+   "region_code": "CA",
+   "city": "Mountain View",
+   "postal_code": "94043",
+   "latitude": 37.4056,
+   "longitude": -122.0775,
+   "accuracy_radius": 1000,
+   "timezone": "America/Los_Angeles",
+   "asn": 15169,
+   "asn_org": "Google LLC",
+   "asn_network": "8.8.8.0/24"
 }
 ```
 
-### Client IP Information
-```
-GET /myip
-```
-Returns geolocation information for the client's IP address.
+### Client IP Info
+`GET /myip`
 
-**Response:**
-```json
-{
-  "ip": "203.0.113.1",
-  "country": "Australia",
-  "country_code": "AU",
-  "region": "New South Wales",
-  "region_code": "NSW",
-  "city": "Sydney",
-  "postal_code": "2000",
-  "latitude": -33.8688,
-  "longitude": 151.2093,
-  "timezone": "Australia/Sydney"
-}
-```
+Returns geolocation info for the requester's IP.
 
+docker-compose --profile updater up -d
 ## Database Management
 
-The server includes flexible database management with both initial download and update capabilities:
+Uses **GeoLite2-City** and **GeoLite2-ASN** databases from MaxMind.
 
-### Initial Setup
-The init container automatically downloads databases on first startup.
+- Initial download: automatic in Docker/Kubernetes via init container
+- Manual download: `scripts/download-geoip-data.sh`
+- Update: `scripts/update-geoip-data.sh` or `scripts/geoip-manager.sh` (supports daemon mode with `UPDATE_INTERVAL`)
 
-### Manual Updates
-Update databases on-demand using the update scripts:
+## Configuration
 
-**Linux/macOS:**
-```bash
-chmod +x update-databases.sh
-./update-databases.sh
-```
+Environment variables:
 
-**Windows (PowerShell):**
-```powershell
-.\update-databases.ps1
-```
+- `MAXMIND_LICENSE_KEY` (required)
+- `MAXMIND_ACCOUNT_ID` (optional, default: 0)
+- `DATA_DIR` (optional, default: ./data)
+- `MODE` (`init`, `update`, `daemon`)
+- `UPDATE_INTERVAL` (for daemon mode, e.g. "30s,5m,3h")
 
-### Automatic Updates (Optional)
-Enable continuous updates that check for new databases every 24 hours:
-
-```bash
-# Start with automatic updates enabled
-docker-compose --profile updater up
-```
-
-### Environment Variables
-
-- `MAXMIND_LICENSE_KEY`: Your MaxMind license key (required)
-- `MAXMIND_ACCOUNT_ID`: Your MaxMind account ID (optional, defaults to 0 for GeoLite2)
-- `DATA_DIR`: Directory where databases are stored (default: varies by deployment)
-- `MODE`: Operation mode for database manager (`init`, `update`, `daemon`)
-
+go build -o geoip-server ./src
+curl http://localhost:8080/8.8.8.8
 ## Development
 
-### Project Structure
-
+Project structure:
 ```
-.
-├── main.go                 # Application entry point
-├── geoip.go               # GeoIP service implementation
-├── download-geoip-data.sh # Database download script
-├── Dockerfile             # Docker configuration
-├── docker-compose.yml     # Docker Compose configuration
-├── go.mod                 # Go module dependencies
-└── README.md              # This file
+geoip-server/
+├── src/                       # Go source code
+│   ├── main.go
+│   ├── geoip.go
+│   └── types.go
+├── scripts/                   # Database management scripts
+│   ├── download-geoip-data.sh
+│   ├── update-geoip-data.sh
+│   ├── geoip-manager.sh
+│   └── geoipupdate.conf.template
+├── Dockerfile                 # Main app image
+├── Dockerfile.init            # Init container image
+├── docker-compose.yml         # Compose config
+├── go.mod, go.sum             # Go modules
+├── Makefile                   # Build automation
+└── README.md
 ```
 
-### Building
-
-```bash
-go build -o geoip-server .
+Build & run locally:
+```sh
+go build -o geoip-server ./src
+./geoip-server
 ```
 
-### Testing
-
-Test the endpoints:
-
-```bash
-# Health check
+Test endpoints:
+```sh
 curl http://localhost:8080/health
-
-# IP lookup
-curl http://localhost:8080/geoip/8.8.8.8
-
-# Client IP
+curl http://localhost:8080/8.8.8.8
 curl http://localhost:8080/myip
 ```
 
 ## Deployment
 
-### Kubernetes
+### Docker
+- Build main app: `docker build -t geoip-server .`
+- Build init container: `docker build -f Dockerfile.init -t geoip-server-init .`
+- Use both images in Kubernetes or Compose as needed
 
-The application is designed to work well in Kubernetes environments with init containers for database downloads. The Docker image can be used with an init container pattern where the init container downloads the MaxMind database before the main application starts.
+### Kubernetes Example
+```yaml
+initContainers:
+   - name: geoip-init
+      image: geoip-server-init:latest
+      env:
+         - name: MAXMIND_LICENSE_KEY
+            valueFrom:
+               secretKeyRef:
+                  name: maxmind-secret
+                  key: license-key
+      volumeMounts:
+         - name: geoip-data
+            mountPath: /shared/data
+containers:
+   - name: geoip-server
+      image: geoip-server:latest
+      env:
+         - name: DATA_DIR
+            value: /shared/data
+      volumeMounts:
+         - name: geoip-data
+            mountPath: /shared/data
+volumes:
+   - name: geoip-data
+      emptyDir: {}
+```
 
-### Production Considerations
-
-1. **Database Updates**: The GeoLite2 database is updated regularly. Consider setting up a cron job or scheduled task to update the database periodically.
-
-2. **Security**: 
-   - Keep your MaxMind license key secure
-   - Consider using secrets management for the license key in production
-   - Use HTTPS in production environments
-
-3. **Performance**: 
-   - The application loads the entire database into memory for fast lookups
-   - Monitor memory usage based on your database size
-   - Consider horizontal scaling for high-traffic scenarios
-
-4. **Monitoring**: 
-   - Use the `/health` endpoint for health checks
-   - Monitor response times and error rates
-   - Set up logging aggregation for troubleshooting
+## Production Notes
+- Keep your MaxMind license key secure (use secrets)
+- Monitor database freshness and server health
+- Use HTTPS and rate limiting in production
+- Horizontal scaling recommended for high traffic
 
 ## License
+MIT License
 
-This project is open source. The MaxMind GeoLite2 database is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.
+---
 
-## Acknowledgments
-
-- MaxMind for providing the GeoLite2 database
-- The Go GeoIP2 library maintainers
-- Gin web framework for the HTTP server
+[Report Bug](https://github.com/JYamazian/geoip-server/issues) • [Request Feature](https://github.com/JYamazian/geoip-server/issues) • [Contribute](https://github.com/JYamazian/geoip-server/pulls)
