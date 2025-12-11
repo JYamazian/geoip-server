@@ -40,10 +40,12 @@ services:
     environment:
       - DATA_DIR=/shared/data
       - GIN_MODE=release
+      - CORS_ALLOW_ORIGIN=*
     volumes:
       - geoip_data:/shared/data
     depends_on:
       - geoip-data-downloader
+    
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

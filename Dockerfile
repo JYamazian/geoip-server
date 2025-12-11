@@ -10,13 +10,13 @@ WORKDIR /app
 # Copy go mod file
 COPY go.mod ./
 
-# Initialize and download dependencies
-RUN go mod tidy && go mod download
+# Download dependencies
+RUN go mod download
 
 # Copy source code
 COPY src/ ./
 
-# Ensure dependencies are up to date and build
+# Tidy and build
 RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o geoip-server .
 
 # Final stage with init container support

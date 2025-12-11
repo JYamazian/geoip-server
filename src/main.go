@@ -32,6 +32,14 @@ func getClientIPForLogging(c *gin.Context) string {
 	return c.ClientIP()
 }
 
+// environment returns the value of an environment variable or a default value
+func environment(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func main() {
 	// Get data directory from environment or use default
 	dataDir := os.Getenv("DATA_DIR")
@@ -66,14 +74,9 @@ func main() {
 
 	// Add CORS middleware
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		c.Header("Access-Control-Allow-Origin", environment("CORS_ALLOW_ORIGIN", "*"))
+		c.Header("Access-Control-Allow-Methods", "GET")
 		c.Header("Access-Control-Allow-Headers", "Content-Type")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
 
 		c.Next()
 	})
@@ -91,6 +94,9 @@ func main() {
 
 	// Get client IP info
 	r.GET("/myip", geoIPService.GetClientIP)
+
+	// Whois endpoint - returns only headers, no body
+	r.GET("/whois", geoIPService.Whois)
 
 	// Set up graceful shutdown
 	srv := &http.Server{

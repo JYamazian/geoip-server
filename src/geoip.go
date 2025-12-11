@@ -117,6 +117,32 @@ func (g *GeoIPService) GetClientIP(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// Whois returns GeoIP information as headers only, no response body
+func (g *GeoIPService) Whois(c *gin.Context) {
+	clientIP := getClientIP(c)
+
+	ip := net.ParseIP(clientIP)
+	if ip != nil {
+		if cityRecord, err := g.cityDB.City(ip); err == nil {
+			c.Header("X-GeoIP-Country", cityRecord.Country.IsoCode)
+			c.Header("X-GeoIP-Country-Name", cityRecord.Country.Names["en"])
+			c.Header("X-GeoIP-City", cityRecord.City.Names["en"])
+			c.Header("X-GeoIP-Postal", cityRecord.Postal.Code)
+			c.Header("X-GeoIP-Timezone", cityRecord.Location.TimeZone)
+			if len(cityRecord.Subdivisions) > 0 {
+				c.Header("X-GeoIP-Region", cityRecord.Subdivisions[0].Names["en"])
+				c.Header("X-GeoIP-Region-Code", cityRecord.Subdivisions[0].IsoCode)
+			}
+		}
+		if asnRecord, err := g.asnDB.ASN(ip); err == nil {
+			c.Header("X-GeoIP-ASN", fmt.Sprintf("%d", asnRecord.AutonomousSystemNumber))
+			c.Header("X-GeoIP-Organization", asnRecord.AutonomousSystemOrganization)
+		}
+	}
+	c.Header("X-Client-IP", clientIP)
+	c.Status(http.StatusNoContent)
+}
+
 // getClientIP extracts the client IP address from the request
 func getClientIP(c *gin.Context) string {
 	// Check Cloudflare headers first - CF-Connecting-IP contains the original client IP
